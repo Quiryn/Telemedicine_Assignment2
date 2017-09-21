@@ -156,8 +156,8 @@ function readDataSource(data) {
 	
 	chart
 		.width(500)
-		.height(170)
-		.margins({top: 10, right: 50, bottom: 25, left: 50})
+		.height(220)
+		.margins({top: 20, right: 50, bottom: 25, left: 50})
 		.dimension(dateDimension)
 		.group(dateGroup)
 		.legend(dc.legend().x(60).y(10))
@@ -222,6 +222,7 @@ function readDataSource(data) {
 				.ordinalColors(["Orange"]),
             dc.lineChart(chart)
                 .group(dateGroup, "Rhinovirus")
+                .useRightYAxis(true)
                 .renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
                 .defined(function(d){
                     return (d.y !== null && d.y !== 0);
@@ -229,9 +230,10 @@ function readDataSource(data) {
                 .valueAccessor(function(d) {
                     return d.value.rhinovirus;
                 })
-                .ordinalColors(["Lila"]),
+                .ordinalColors(["Aqua"]),
             dc.lineChart(chart)
                 .group(dateGroup, "Coronavirus")
+                .useRightYAxis(true)
                 .renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
                 .defined(function(d){
                     return (d.y !== null && d.y !== 0);
@@ -259,7 +261,7 @@ function readDataSource(data) {
                 .valueAccessor(function(d) {
                     return d.value.metapneumovir;
                 })
-                .ordinalColors(["Grey"]),
+                .ordinalColors(["Yellow"]),
             dc.lineChart(chart)
                 .group(dateGroup, "Adenovirus")
                 .renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
@@ -269,7 +271,7 @@ function readDataSource(data) {
                 .valueAccessor(function(d) {
                     return d.value.adenovirus;
                 })
-                .ordinalColors(["Black"])
+                .ordinalColors(["Purple"])
 		]);
 	
 	resultChart
