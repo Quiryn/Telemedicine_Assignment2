@@ -17,7 +17,7 @@ var resultGroup = null;
 var nameGroup = null;
 
 function init() {
-	d3.json("Assets/data.json", readDataSource);
+	d3.json("Assets/19_ALL_Luftvei.json", readDataSource);
 }
 
 function readDataSource(data) {
@@ -26,8 +26,9 @@ function readDataSource(data) {
 	rows = [];
 	
 	for(i = 0; i < dataset["ResultSet"]["items"]["item"].length; i++) {
+		//if(dataset["ResultSet"]["items"]["item"] [i]["-name"] == "Atypiske luftveisagens") {	
+
 		var item = dataset["ResultSet"]["items"]["item"][i];
-		
 		for(j = 0; j < item["areas"]["area"]["onLocation"].length; j++) {
 			var unit = item["areas"]["area"]["onLocation"][j];
 			
@@ -37,32 +38,37 @@ function readDataSource(data) {
 			
 			for(k = 0; k < unit["DataCollection"]["DataSet"].length; k++) {
 				var data = unit["DataCollection"]["DataSet"][k];
-				
-				for(l = 0; l < data["dataResults"]["result"].length; l++) {
-					var result = JSON.parse("[" + data["dataResults"]["result"][l]["values"] + "]");
-					
-					for(m = 0; m < result.length; m++) {
-					
-						var resultValue = result[m];
-						var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1)
-						/* 
-							Add 1  or 4 weeks to date depending on how the data was aggregated as per the documentation (Aggrevated over 7 days gives 28 entries; over 28 days gives 7 entries). 
-							I think this gives us the correct dates?
-						*/
-						var date = moment(data["-startDate"], "YYYY-MM-DD").add((result.length - m - 1) * (result.length == 7 ? 28 : 7), 'days'); 
+
+				if(data["categories"]["category"].length != 2 && data["categories"]["category"]["value"] == "Female") {
+
+					for(l = 0; l < data["dataResults"]["result"].length; l++) {
+						var result = JSON.parse("[" + data["dataResults"]["result"][l]["values"] + "]");
 						
-						var row = { 
-							name: item["-name"],
-							area: item["areas"]["area"]["-name"],
-							date: date,
-							resultName: resultName,
-							resultCount: resultValue
-						};
+						for(m = 0; m < result.length; m++) {
 						
-						rows.push(row)
+							var resultValue = result[m];
+							var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1)
+							/* 
+								Add 1  or 4 weeks to date depending on how the data was aggregated as per the documentation (Aggrevated over 7 days gives 28 entries; over 28 days gives 7 entries). 
+								I think this gives us the correct dates?
+							*/
+							var date = moment(data["-startDate"], "YYYY-MM-DD").add((result.length - m - 1) * (result.length == 7 ? 28 : 7), 'days'); 
+							
+							var row = { 
+								name: item["-name"],
+								area: item["areas"]["area"]["-name"],
+								date: date,
+								resultName: resultName,
+								resultCount: resultValue
+							};
+							
+							rows.push(row)
+							//alert(JSON.stringify(row));
+						}
 					}
 				}
 			}
+		//}
 		}
 	}
 	
@@ -77,13 +83,13 @@ function readDataSource(data) {
 			p.count++;
 			
 			switch(v.resultName) {
-			case "Positiv":
+			case "Chlamydophila pneumoniae":
 				p.positiveSum += +v.resultCount;
 			break;
-			case "Negativ":
+			case "Mycoplasma pneumoniae":
 				p.negativeSum += +v.resultCount;
 			break;
-			case "Inkonklusiv":
+			case "Kikhoste":
 				p.inconclusiveSum += +v.resultCount;
 				break;
 			}
@@ -93,13 +99,13 @@ function readDataSource(data) {
 			p.count--;
 			
 			switch(v.resultName) {
-			case "Positiv":
+			case "Chlamydophila pneumoniae":
 				p.positiveSum -= +v.resultCount;
 			break;
-			case "Negativ":
+			case "Mycoplasma pneumoniae":
 				p.negativeSum -= +v.resultCount;
 			break;
-			case "Inkonklusiv":
+			case "Kikhoste":
 				p.inconclusiveSum -= +v.resultCount;
 				break;
 			}
@@ -108,7 +114,7 @@ function readDataSource(data) {
 		},function() { 
 			return { count: 0, positiveSum: 0, negativeSum: 0, inconclusiveSum: 0 }
 		});
-	resultGroup = resultDimension.group().reduceCount();
+	resultGroup = resultDimension.group().reduceSum(function(d) { return d.resultCount; });
 	nameGroup = nameDimension.group().reduceCount();
 	
 	
@@ -133,9 +139,9 @@ function readDataSource(data) {
 		.renderHorizontalGridLines(true)
 		.title(function (d) {
 			return d.key.format("MMMM Do YYYY") + "\n" + 
-				"Positive: " + d.value.positiveSum + "\n" +
-				"Negative: " + d.value.negativeSum + "\n" +
-				"Inconclusive: " + d.value.inconclusiveSum + "\n";
+				"Chlamydophila pneumoniae: " + d.value.positiveSum + "\n" +
+				"Mycoplasma pneumoniae: " + d.value.negativeSum + "\n" +
+				"Kikhoste: " + d.value.inconclusiveSum + "\n";
 		})
 		.keyAccessor(function (d) {
 			return d.key;
@@ -149,7 +155,7 @@ function readDataSource(data) {
 		.brushOn(false)
 		.compose([
 			dc.lineChart(chart)
-				.group(dateGroup, "Positive")
+				.group(dateGroup, "Chlamydophila pneumoniae")
 				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
 				.defined(function(d){
 					return (d.y !== null && d.y !== 0);
@@ -159,7 +165,7 @@ function readDataSource(data) {
 				})
 				.ordinalColors(["Green"]),
 			dc.lineChart(chart)
-				.group(dateGroup, "Negative")
+				.group(dateGroup, "Mycoplasma pneumoniae")
 				.useRightYAxis(true)
 				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
 				.defined(function(d){
@@ -170,7 +176,7 @@ function readDataSource(data) {
 				})
 				.ordinalColors(["Red"]),
 			dc.lineChart(chart)
-				.group(dateGroup, "Inconclusive")
+				.group(dateGroup, "Kikhoste")
 				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
 				.defined(function(d){
 					return (d.y !== null && d.y !== 0);
