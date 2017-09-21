@@ -39,7 +39,7 @@ function readDataSource(data) {
 			for(k = 0; k < unit["DataCollection"]["DataSet"].length; k++) {
 				var data = unit["DataCollection"]["DataSet"][k];
 
-				if(data["categories"]["category"].length != 2 && data["categories"]["category"]["value"] == "Female") {
+				if(data["categories"]["category"].length != 2 && data["categories"]["category"]["type"] != "AgeGroup") {
 
 					for(l = 0; l < data["dataResults"]["result"].length; l++) {
 						var result = JSON.parse("[" + data["dataResults"]["result"][l]["values"] + "]");
@@ -84,14 +84,29 @@ function readDataSource(data) {
 			
 			switch(v.resultName) {
 			case "Chlamydophila pneumoniae":
-				p.positiveSum += +v.resultCount;
+				p.chlamydophila += +v.resultCount;
 			break;
 			case "Mycoplasma pneumoniae":
-				p.negativeSum += +v.resultCount;
+				p.mycoplasma += +v.resultCount;
 			break;
 			case "Kikhoste":
-				p.inconclusiveSum += +v.resultCount;
-				break;
+				p.kikhoste += +v.resultCount;
+			break;
+			case "Rhinovirus":
+                p.rhinovirus += +v.resultCount;
+                break;
+            case "Coronavirus":
+                p.coronavirus += +v.resultCount;
+                    break;
+            case "Parainfluensa 1, 2 og 3":
+                p.parainfluensa += +v.resultCount;
+                    break;
+            case "Metapneumovir":
+                p.metapneumovir += +v.resultCount;
+                    break;
+            case "Adenovirus":
+                p.adenovirus += +v.resultCount;
+                    break;
 			}
 			
 			return p;
@@ -100,19 +115,34 @@ function readDataSource(data) {
 			
 			switch(v.resultName) {
 			case "Chlamydophila pneumoniae":
-				p.positiveSum -= +v.resultCount;
+				p.chlamydophila -= +v.resultCount;
 			break;
 			case "Mycoplasma pneumoniae":
-				p.negativeSum -= +v.resultCount;
+				p.mycoplasma -= +v.resultCount;
 			break;
 			case "Kikhoste":
-				p.inconclusiveSum -= +v.resultCount;
+				p.kikhoste -= +v.resultCount;
 				break;
+            case "Rhinovirus":
+				p.rhinovirus += +v.resultCount;
+                    break;
+            case "Coronavirus":
+                p.coronavirus += +v.resultCount;
+                    break;
+            case "Parainfluensa 1, 2 og 3":
+                p.parainfluensa += +v.resultCount;
+                    break;
+            case "Metapneumovir":
+                p.metapneumovir += +v.resultCount;
+                    break;
+            case "Adenovirus":
+                p.adenovirus += +v.resultCount;
+                    break;
 			}
 			
 			return p;
 		},function() { 
-			return { count: 0, positiveSum: 0, negativeSum: 0, inconclusiveSum: 0 }
+			return { count: 0, chlamydophila: 0, mycoplasma: 0, kikhoste: 0, rhinovirus: 0, coronavirus: 0, parainfluensa: 0, metapneumovir: 0, Adenovirus: 0 }
 		});
 	resultGroup = resultDimension.group().reduceSum(function(d) { return d.resultCount; });
 	nameGroup = nameDimension.group().reduceCount();
@@ -139,15 +169,20 @@ function readDataSource(data) {
 		.renderHorizontalGridLines(true)
 		.title(function (d) {
 			return d.key.format("MMMM Do YYYY") + "\n" + 
-				"Chlamydophila pneumoniae: " + d.value.positiveSum + "\n" +
-				"Mycoplasma pneumoniae: " + d.value.negativeSum + "\n" +
-				"Kikhoste: " + d.value.inconclusiveSum + "\n";
+				"Chlamydophila pneumoniae: " + d.value.chlamydophila + "\n" +
+				"Mycoplasma pneumoniae: " + d.value.mycoplasma + "\n" +
+				"Kikhoste: " + d.value.kikhoste + "\n" +
+            	"Rhinovirus: " + d.value.rhinovirus + "\n" +
+            	"Coronavirus: " + d.value.coronavirus + "\n"; +
+            	"Parainfluensa 1, 2 og 3: " + d.value.parainfluensa + "\n" +
+            	"Metapneumovir: " + d.value.metapneumovir + "\n" +
+            	"Adenovirus: " + d.value.adenovirus + "\n";
 		})
 		.keyAccessor(function (d) {
 			return d.key;
 		})
 		.valueAccessor(function(d) {
-			return d.value.positiveSum;
+			return d.value.chlamydophila;
 		})
 		.elasticX(true)
 		.elasticY(true)
@@ -161,18 +196,18 @@ function readDataSource(data) {
 					return (d.y !== null && d.y !== 0);
 				})
 				.valueAccessor(function(d) {
-					return d.value.positiveSum;
+					return d.value.chlamydophila;
 				})
 				.ordinalColors(["Green"]),
 			dc.lineChart(chart)
 				.group(dateGroup, "Mycoplasma pneumoniae")
-				.useRightYAxis(true)
+				//.useRightYAxis(true)
 				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
 				.defined(function(d){
 					return (d.y !== null && d.y !== 0);
 				})
 				.valueAccessor(function(d) {
-					return d.value.negativeSum;
+					return d.value.mycoplasma;
 				})
 				.ordinalColors(["Red"]),
 			dc.lineChart(chart)
@@ -182,9 +217,59 @@ function readDataSource(data) {
 					return (d.y !== null && d.y !== 0);
 				})
 				.valueAccessor(function(d) {
-					return d.value.inconclusiveSum;
+					return d.value.kikhoste;
 				})
-				.ordinalColors(["Orange"])
+				.ordinalColors(["Orange"]),
+            dc.lineChart(chart)
+                .group(dateGroup, "Rhinovirus")
+                .renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
+                .defined(function(d){
+                    return (d.y !== null && d.y !== 0);
+                })
+                .valueAccessor(function(d) {
+                    return d.value.rhinovirus;
+                })
+                .ordinalColors(["Lila"]),
+            dc.lineChart(chart)
+                .group(dateGroup, "Coronavirus")
+                .renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
+                .defined(function(d){
+                    return (d.y !== null && d.y !== 0);
+                })
+                .valueAccessor(function(d) {
+                    return d.value.coronavirus;
+                })
+                .ordinalColors(["Pink"]),
+            dc.lineChart(chart)
+                .group(dateGroup, "Parainfluensa 1, 2 og 3")
+                .renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
+                .defined(function(d){
+                    return (d.y !== null && d.y !== 0);
+                })
+                .valueAccessor(function(d) {
+                    return d.value.parainfluensa;
+                })
+                .ordinalColors(["Brown"]),
+            dc.lineChart(chart)
+                .group(dateGroup, "Metapneumovir")
+                .renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
+                .defined(function(d){
+                    return (d.y !== null && d.y !== 0);
+                })
+                .valueAccessor(function(d) {
+                    return d.value.metapneumovir;
+                })
+                .ordinalColors(["Grey"]),
+            dc.lineChart(chart)
+                .group(dateGroup, "Adenovirus")
+                .renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
+                .defined(function(d){
+                    return (d.y !== null && d.y !== 0);
+                })
+                .valueAccessor(function(d) {
+                    return d.value.adenovirus;
+                })
+                .ordinalColors(["Black"])
 		]);
 	
 	resultChart
