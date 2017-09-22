@@ -54,8 +54,7 @@ function readDataSource(data) {
 							/* 
 								Add 1  or 4 weeks to date depending on how the data was aggregated as per the documentation (Aggrevated over 7 days gives 28 entries; over 28 days gives 7 entries). 
 								I think this gives us the correct dates?
-							*/
-							
+							*/							
 						}	
 					}
 					else{
@@ -155,7 +154,7 @@ function readDataSource(data) {
 		});
 	//replace reduceCount with reduceSum to not just count the appearances of a result but to sum up the values
 	resultGroup = resultDimension.group().reduceSum(function(d) { return d.resultCount; });
-	nameGroup = nameDimension.group().reduceCount();
+	nameGroup = nameDimension.group().reduceSum(function(d) { return d.resultCount; });
 	
 	
 	chart = dc.compositeChart("#chart-container");
@@ -166,8 +165,8 @@ function readDataSource(data) {
 	
 	chart
 		.width(500)
-		.height(170)
-		.margins({top: 10, right: 50, bottom: 25, left: 50})
+		.height(220)
+		.margins({top: 20, right: 50, bottom: 25, left: 50})
 		.dimension(dateDimension)
 		.group(dateGroup)
 		.legend(dc.legend().x(60).y(10))
@@ -190,7 +189,7 @@ function readDataSource(data) {
 			return d.key;
 		})
 		.valueAccessor(function(d) {
-			return d.value.positiveSum;
+			return d.value.chlamydophila;
 		})
 		.elasticX(true)
 		.elasticY(true)
@@ -209,7 +208,7 @@ function readDataSource(data) {
 				.ordinalColors(["Green"]),
 			dc.lineChart(chart)
 				.group(dateGroup, "RS-virus")
-				.useRightYAxis(true)
+				//.useRightYAxis(true)
 				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
 				.defined(function(d){
 					return (d.y !== null && d.y !== 0);
