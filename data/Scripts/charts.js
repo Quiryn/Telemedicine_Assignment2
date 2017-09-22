@@ -26,9 +26,11 @@ function readDataSource(data) {
 	rows = [];
 	
 	for(i = 0; i < dataset["ResultSet"]["items"]["item"].length; i++) {
+		//for a first test: just focus on the category "Atypiske luftveisagens"
 		//if(dataset["ResultSet"]["items"]["item"] [i]["-name"] == "Atypiske luftveisagens") {	
 
 		var item = dataset["ResultSet"]["items"]["item"][i];
+		var resultName = item["-name"];
 		for(j = 0; j < item["areas"]["area"]["onLocation"].length; j++) {
 			var unit = item["areas"]["area"]["onLocation"][j];
 			
@@ -36,39 +38,57 @@ function readDataSource(data) {
 				continue;
 			}
 			
+			var resultValue = [0,0,0,0,0,0,0];
 			for(k = 0; k < unit["DataCollection"]["DataSet"].length; k++) {
 				var data = unit["DataCollection"]["DataSet"][k];
+				
+				//Because of some missing results and NULL-values, I excluded all the results devided by agegroup
+				if(data["categories"]["category"].length != 2 && data["categories"]["category"]["type"] != "AgeGroup") {
 
-				if(data["categories"]["category"].length != 2 && data["categories"]["category"]["value"] == "Female") {
-
-					for(l = 0; l < data["dataResults"]["result"].length; l++) {
-						var result = JSON.parse("[" + data["dataResults"]["result"][l]["values"] + "]");
-						
-						for(m = 0; m < result.length; m++) {
-						
-							var resultValue = result[m];
-							var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1)
+					if(data["dataResults"]["result"].length == undefined) {
+						var result = JSON.parse("[" + data["dataResults"]["result"]["values"] + "]");
+																					
+						for(m = 0; m < result.length; m++) {						
+							resultValue[m] += result[m];
+							//var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1)
 							/* 
 								Add 1  or 4 weeks to date depending on how the data was aggregated as per the documentation (Aggrevated over 7 days gives 28 entries; over 28 days gives 7 entries). 
 								I think this gives us the correct dates?
 							*/
-							var date = moment(data["-startDate"], "YYYY-MM-DD").add((result.length - m - 1) * (result.length == 7 ? 28 : 7), 'days'); 
 							
-							var row = { 
-								name: item["-name"],
-								area: item["areas"]["area"]["-name"],
-								date: date,
-								resultName: resultName,
-								resultCount: resultValue
-							};
-							
-							rows.push(row)
-							//alert(JSON.stringify(row));
+						}	
+					}
+					else{
+						for(l = 0; l < data["dataResults"]["result"].length; l++) {
+							var result = JSON.parse("[" + data["dataResults"]["result"][l]["values"] + "]");
+																						
+							for(m = 0; m < result.length; m++) {						
+								resultValue[m] += result[m];
+								//var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1)
+								/* 
+									Add 1  or 4 weeks to date depending on how the data was aggregated as per the documentation (Aggrevated over 7 days gives 28 entries; over 28 days gives 7 entries). 
+									I think this gives us the correct dates?
+								*/								
+							}
 						}
 					}
+					
+					for(m = 0; m < resultValue.length; m++) {
+						var date = moment(data["-startDate"], "YYYY-MM-DD").add((resultValue.length - m - 1) * (resultValue.length == 7 ? 28 : 7), 'days'); 
+								
+						var row = { 
+							name: item["-name"],
+							area: item["areas"]["area"]["-name"],
+							date: date,
+							resultName: resultName,
+							resultCount: resultValue[m]
+						};
+
+						rows.push(row);
+					}	
 				}
 			}
-		//}
+		//	}
 		}
 	}
 	
@@ -82,15 +102,25 @@ function readDataSource(data) {
 		function(p, v) { 
 			p.count++;
 			
+			//adjust the cases to the new subcategories of "Atypiske luftveisagens"
 			switch(v.resultName) {
-			case "Chlamydophila pneumoniae":
-				p.positiveSum += +v.resultCount;
-			break;
-			case "Mycoplasma pneumoniae":
-				p.negativeSum += +v.resultCount;
-			break;
-			case "Kikhoste":
-				p.inconclusiveSum += +v.resultCount;
+			case "Influensa A":
+				p.infA += +v.resultCount;
+				break;
+			case "RS-virus":
+				p.rs += +v.resultCount;
+				break;
+			case "Forkjolelsesvirus":
+				p.forkjolelsesvirus += +v.resultCount;
+				break;
+			case "Atypiske luftveisagens":
+				p.luftveisagens += +v.resultCount;
+				break;
+			case "Andre bakterier":
+				p.andre += +v.resultCount;
+				break;
+			case "Influensa B":
+				p.infB += +v.resultCount;
 				break;
 			}
 			
@@ -99,21 +129,31 @@ function readDataSource(data) {
 			p.count--;
 			
 			switch(v.resultName) {
-			case "Chlamydophila pneumoniae":
-				p.positiveSum -= +v.resultCount;
-			break;
-			case "Mycoplasma pneumoniae":
-				p.negativeSum -= +v.resultCount;
-			break;
-			case "Kikhoste":
-				p.inconclusiveSum -= +v.resultCount;
+			case "Influensa A":
+				p.infA -= +v.resultCount;
+				break;
+			case "RS-virus":
+				p.rs -= +v.resultCount;
+				break;
+			case "Forkjolelsesvirus":
+				p.forkjolelsesvirus -= +v.resultCount;
+				break;
+			case "Atypiske luftveisagens":
+				p.luftveisagens -= +v.resultCount;
+				break;
+			case "Andre bakterier":
+				p.andre -= +v.resultCount;
+				break;
+			case "Influensa B":
+				p.infB -= +v.resultCount;
 				break;
 			}
 			
 			return p;
 		},function() { 
-			return { count: 0, positiveSum: 0, negativeSum: 0, inconclusiveSum: 0 }
+			return { count: 0, infA: 0, rs: 0, forkjolelsesvirus: 0, luftveisagens: 0, andre: 0, infB: 0 }
 		});
+	//replace reduceCount with reduceSum to not just count the appearances of a result but to sum up the values
 	resultGroup = resultDimension.group().reduceSum(function(d) { return d.resultCount; });
 	nameGroup = nameDimension.group().reduceCount();
 	
@@ -139,9 +179,12 @@ function readDataSource(data) {
 		.renderHorizontalGridLines(true)
 		.title(function (d) {
 			return d.key.format("MMMM Do YYYY") + "\n" + 
-				"Chlamydophila pneumoniae: " + d.value.positiveSum + "\n" +
-				"Mycoplasma pneumoniae: " + d.value.negativeSum + "\n" +
-				"Kikhoste: " + d.value.inconclusiveSum + "\n";
+				"Influensa A: " + d.value.infA + "\n" +
+				"RS-virus: " + d.value.rs + "\n" +
+				"Forkjolelsesvirus: " + d.value.forkjolelsesvirus + "\n";
+				"Atypiske luftveisagens: " + d.value.luftveisagens + "\n";
+				"Andre bakterier: " + d.value.andre + "\n";
+				"Influensa B: " + d.value.infB + "\n";
 		})
 		.keyAccessor(function (d) {
 			return d.key;
@@ -155,36 +198,69 @@ function readDataSource(data) {
 		.brushOn(false)
 		.compose([
 			dc.lineChart(chart)
-				.group(dateGroup, "Chlamydophila pneumoniae")
+				.group(dateGroup, "Influensa A")
 				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
 				.defined(function(d){
 					return (d.y !== null && d.y !== 0);
 				})
 				.valueAccessor(function(d) {
-					return d.value.positiveSum;
+					return d.value.infA;
 				})
 				.ordinalColors(["Green"]),
 			dc.lineChart(chart)
-				.group(dateGroup, "Mycoplasma pneumoniae")
+				.group(dateGroup, "RS-virus")
 				.useRightYAxis(true)
 				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
 				.defined(function(d){
 					return (d.y !== null && d.y !== 0);
 				})
 				.valueAccessor(function(d) {
-					return d.value.negativeSum;
+					return d.value.rs;
 				})
 				.ordinalColors(["Red"]),
 			dc.lineChart(chart)
-				.group(dateGroup, "Kikhoste")
+				.group(dateGroup, "Forkjolelsesvirus")
 				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
 				.defined(function(d){
 					return (d.y !== null && d.y !== 0);
 				})
 				.valueAccessor(function(d) {
-					return d.value.inconclusiveSum;
+					return d.value.forkjolelsesvirus;
 				})
-				.ordinalColors(["Orange"])
+				.ordinalColors(["Orange"]),
+			dc.lineChart(chart)
+				.group(dateGroup, "Atypiske luftveisagens")
+				.useRightYAxis(true)
+				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
+				.defined(function(d){
+					return (d.y !== null && d.y !== 0);
+				})
+				.valueAccessor(function(d) {
+					return d.value.luftveisagens;
+				})
+				.ordinalColors(["Blue"]),
+			dc.lineChart(chart)
+				.group(dateGroup, "Andre bakterier")
+				.useRightYAxis(true)
+				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
+				.defined(function(d){
+					return (d.y !== null && d.y !== 0);
+				})
+				.valueAccessor(function(d) {
+					return d.value.andre;
+				})
+				.ordinalColors(["Grey"]),
+			dc.lineChart(chart)
+				.group(dateGroup, "Influensa B")
+				.useRightYAxis(true)
+				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
+				.defined(function(d){
+					return (d.y !== null && d.y !== 0);
+				})
+				.valueAccessor(function(d) {
+					return d.value.infB;
+				})
+				.ordinalColors(["Lime"]),
 		]);
 	
 	resultChart
