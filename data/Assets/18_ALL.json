@@ -699,7 +699,7 @@
                   "AggregatedCollection": {
                     "DataSet": {
                       "-daysPerUnit": "7",
-                      "-startDate": "2017-03-01",
+                      "-startDate": "2017-03-10",
                       "numberOfUnits": "28",
                       "dataResults": {
                         "result": [
@@ -7390,7 +7390,7 @@
                   "AggregatedCollection": {
                     "DataSet": {
                       "-daysPerUnit": "7",
-                      "-startDate": "2017-03-01",
+                      "-startDate": "2017-03-10",
                       "numberOfUnits": "28",
                       "dataResults": {
                         "result": [
@@ -7417,7 +7417,7 @@
                     "DataSet": [
                       {
                         "-daysPerUnit": "28",
-                        "-startDate": "2017-03-01",
+                        "-startDate": "2017-03-10",
                         "numberOfUnits": "7",
                         "categories": {
                           "category": {
@@ -7871,7 +7871,7 @@
                   "AggregatedCollection": {
                     "DataSet": {
                       "-daysPerUnit": "7",
-                      "-startDate": "2017-03-01",
+                      "-startDate": "2017-03-10",
                       "numberOfUnits": "28",
                       "dataResults": {
                         "result": [
