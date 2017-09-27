@@ -1,6 +1,8 @@
 window.onload = init;
 
+var currentSymptom;
 var dataset = null;
+var rows = [];
 var luftveiRows = [];
 var gastroRows = [];
 var ndx = null;
@@ -24,13 +26,28 @@ function init() {
 	d3.json("Assets/18_ALL.json", readDataSource2);
 	d3.json("Assets/19_ALL.json", readDataSource2);
 	d3.json("Assets/20_ALL.json", readDataSource2);
+}
+
+function setSymptom(){
+	var result = [];
+	var select = document.getElementById("symptomSelect");
+	currentSymptom = select.options[select.selectedIndex].text;
+	document.getElementById("symptomHead").innerHTML = select.options[select.selectedIndex].text;
 	
+	
+	for(i = 0; i < rows.length; i++){
+		if(rows[i]["resultName"] == currentSymptom){
+			result.push(rows[i]);
+		}
+	}
+	
+	displayData(result, "#symptom-chart-container");	
 }
 
 function readDataSource(data) {
 	dataset = data;
 	
-	var rows = [];
+	var exampleRows = [];
 	
 	for(i = 0; i < dataset["ResultSet"]["items"]["item"].length; i++) {
 		//for a first test: just focus on the category "Atypiske luftveisagens"
@@ -90,21 +107,21 @@ function readDataSource(data) {
 							resultCount: resultValue[m]
 						};
 
-						rows.push(row);
+						exampleRows.push(row);
 					}	
 				}
 			}
 		//	}
 		}
 	}
-	showExampleData(rows);
+	//showExampleData(exampleRows);
  }
 
 function readDataSource2(data) {
 	dataset = data;
 	
 	for(i = 0; i < dataset["ResultSet"]["items"]["item"].length; i++) {
-		if(dataset["ResultSet"]["items"]["item"] [i]["-name"] == "Alle") {	
+		//if(dataset["ResultSet"]["items"]["item"] [i]["-name"] == "Alle") {	
 
 			var item = dataset["ResultSet"]["items"]["item"][i];
 
@@ -114,17 +131,14 @@ function readDataSource2(data) {
 				var data = unit["AggregatedCollection"]["DataSet"];				
 
 				for(l = 0; l < data["dataResults"]["result"].length; l++) {
+
 					var result = JSON.parse("[" + data["dataResults"]["result"][l]["values"] + "]");
-														
+					var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1);
+					
 					for(m = 0; m < result.length; m++) {						
 						var resultValue = result[m];
-						var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1)
 						var date = moment(data["-startDate"], "YYYY-MM-DD").add((result.length - m - 1) * (result.length == 7 ? 28 : 7), 'days'); 
-
-						/* 
-							Add 1  or 4 weeks to date depending on how the data was aggregated as per the documentation (Aggrevated over 7 days gives 28 entries; over 28 days gives 7 entries). 
-							I think this gives us the correct dates?
-						*/
+						
 						var row = { 
 							name: item["areas"]["area"]["-name"],
 							area: item["areas"]["area"]["-name"],
@@ -132,20 +146,22 @@ function readDataSource2(data) {
 							resultName: resultName,
 							resultCount: resultValue
 						};
-						if(resultName == "Luftvei"){						
-							luftveiRows.push(row);
-						}
-						if(resultName == "Gastrointestinalt") {
-							gastroRows.push(row);
-						}
+						rows.push(row);
 					}
+					
+					/*if(rows[resultName] == "undefined"){
+						console.log(JSON.stringify(rows));
+						rows[resultName] = tempRows;
+					}else{
+						console.log(JSON.stringify(tempRows[0]));
+						rows[resultName].concat(tempRows);
+
+					}*/
 				}	
 			}
-		}
+		//}
 	}
-	displayData(luftveiRows, "#luftvei-chart-container");
-	displayData(gastroRows, "#gastro-chart-container");
-
+	setSymptom();
 }	
 
 function showExampleData(rows){	

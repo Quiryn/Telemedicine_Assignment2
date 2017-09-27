@@ -24,14 +24,24 @@
 <div id="name-chart-container">
     <h2>Viruses</h2>
 </div>
-
-<div id="luftvei-chart-container">
-    <h2>Luftvei</h2>
+<div class="dropdown">
+   <select id="symptomSelect" onchange="setSymptom()">
+	  <option value="luftvei" selected="selected">Luftvei</option>
+	  <option value="gastro">Gastrointestinalt</option>
+	  <option>Influensa A</option>
+	  <option>Influensa B</option>
+	  <option>RS-virus</option>
+	  <option>Forkjolelsesvirus</option>
+	  <option>Atypiske luftveisagens</option>
+	  <option>Bakterie</option>
+	  <option>Virus</option>
+	  <option>Parasitter</option>
+	  
+	</select> 
+</div> 
+<div id="symptom-chart-container">
+    <h2 id="symptomHead"></h2>
 </div>
-<div id="gastro-chart-container">
-    <h2>Gastrointestinalt</h2>
-</div>
-
 
 
 <div id="chart-container">
