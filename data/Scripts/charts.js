@@ -21,7 +21,7 @@ var resultGroup = null;
 var nameGroup = null;
 
 function init() {
-	d3.json("Assets/19_ALL_Luftvei.json", readDataSource);
+	d3.json("Assets/19_ALL.json", readDataSource);
 	
 	d3.json("Assets/18_ALL.json", readDataSource2);
 	d3.json("Assets/19_ALL.json", readDataSource2);
@@ -54,7 +54,7 @@ function readDataSource(data) {
 		//if(dataset["ResultSet"]["items"]["item"] [i]["-name"] == "Atypiske luftveisagens") {	
 
 		var item = dataset["ResultSet"]["items"]["item"][i];
-		var resultName = item["-name"];
+
 		for(j = 0; j < item["areas"]["area"]["onLocation"].length; j++) {
 			var unit = item["areas"]["area"]["onLocation"][j];
 			
@@ -67,31 +67,32 @@ function readDataSource(data) {
 				var data = unit["DataCollection"]["DataSet"][k];
 				
 				//Because of some missing results and NULL-values, I excluded all the results devided by agegroup
-				if(data["categories"]["category"].length != 2 && data["categories"]["category"]["type"] != "AgeGroup") {
+				if(data["categories"]["category"].length == 2) {
+					var ageGroup = null;
+					var sex = null;
+
+					if(data["categories"]["category"][0]["type"] == "AgeGroup"){
+						ageGroup = data["categories"]["category"][0]["value"];
+					}
+					if(data["categories"]["category"][1]["type"] == "Sex"){
+						sex = data["categories"]["category"][1]["value"];
+					}
 
 					if(data["dataResults"]["result"].length == undefined) {
 						var result = JSON.parse("[" + data["dataResults"]["result"]["values"] + "]");
-																					
+						var resultName = data["dataResults"]["result"]["name"].substring(data["dataResults"]["result"]["name"].indexOf("=") + 1);
+						
 						for(m = 0; m < result.length; m++) {						
-							resultValue[m] += result[m];
-							//var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1)
-							/* 
-								Add 1  or 4 weeks to date depending on how the data was aggregated as per the documentation (Aggrevated over 7 days gives 28 entries; over 28 days gives 7 entries). 
-								I think this gives us the correct dates?
-							*/							
+							resultValue[m] += result[m];							
 						}	
 					}
 					else{
 						for(l = 0; l < data["dataResults"]["result"].length; l++) {
 							var result = JSON.parse("[" + data["dataResults"]["result"][l]["values"] + "]");
-																						
+							var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1);
+							
 							for(m = 0; m < result.length; m++) {						
-								resultValue[m] += result[m];
-								//var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1)
-								/* 
-									Add 1  or 4 weeks to date depending on how the data was aggregated as per the documentation (Aggrevated over 7 days gives 28 entries; over 28 days gives 7 entries). 
-									I think this gives us the correct dates?
-								*/								
+								resultValue[m] += result[m];								
 							}
 						}
 					}
@@ -104,7 +105,9 @@ function readDataSource(data) {
 							area: item["areas"]["area"]["-name"],
 							date: date,
 							resultName: resultName,
-							resultCount: resultValue[m]
+							resultCount: resultValue[m],
+							ageGroup: ageGroup,
+							sex: sex
 						};
 
 						exampleRows.push(row);
@@ -114,7 +117,7 @@ function readDataSource(data) {
 		//	}
 		}
 	}
-	//showExampleData(exampleRows);
+	showExampleData(exampleRows);
  }
 
 function readDataSource2(data) {
@@ -168,14 +171,13 @@ function showExampleData(rows){
 	ndx = crossfilter(rows);
 	
 	dateDimension = ndx.dimension(function(d) { return d.date });
-	resultDimension = ndx.dimension(function(d) { return d.resultName });
-	nameDimension = ndx.dimension(function(d) { return d.name });
+	resultDimension = ndx.dimension(function(d) { return d.ageGroup });
+	nameDimension = ndx.dimension(function(d) { return d.sex });
 	
 	dateGroup = dateDimension.group().reduce(
 		function(p, v) { 
 			p.count++;
 			
-			//adjust the cases to the new subcategories of "Atypiske luftveisagens"
 			switch(v.resultName) {
 			case "Influensa A":
 				p.infA += +v.resultCount;

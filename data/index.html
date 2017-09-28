@@ -14,33 +14,35 @@
 </head>
 
 <body>
-
-<div id="chart-container">
-    <h2>Occurence of different Types</h2>
+<div width=100%>
+	<div id="chart-container">
+		<h2>Occurence of different Types</h2>
+	</div>
+	<div id="result-chart-container">
+		<h2>Age Groups</h2>
+	</div>
+	<div id="name-chart-container">
+		<h2>Gender</h2>
+	</div>
 </div>
-<div id="result-chart-container">
-    <h2>Results</h2>
-</div>
-<div id="name-chart-container">
-    <h2>Viruses</h2>
-</div>
-<div class="dropdown">
-   <select id="symptomSelect" onchange="setSymptom()">
-	  <option value="luftvei" selected="selected">Luftvei</option>
-	  <option value="gastro">Gastrointestinalt</option>
-	  <option>Influensa A</option>
-	  <option>Influensa B</option>
-	  <option>RS-virus</option>
-	  <option>Forkjolelsesvirus</option>
-	  <option>Atypiske luftveisagens</option>
-	  <option>Bakterie</option>
-	  <option>Virus</option>
-	  <option>Parasitter</option>
-	  
-	</select> 
-</div> 
-<div id="symptom-chart-container">
-    <h2 id="symptomHead"></h2>
+<div width="100%" style="float:left; margin-top:30px;">
+	<div class="dropdown" float="left">
+	   <select id="symptomSelect" onchange="setSymptom()">
+		  <option value="luftvei" selected="selected">Luftvei</option>
+		  <option value="gastro">Gastrointestinalt</option>
+		  <option>Influensa A</option>
+		  <option>Influensa B</option>
+		  <option>RS-virus</option>
+		  <option>Forkjolelsesvirus</option>
+		  <option>Atypiske luftveisagens</option>
+		  <option>Bakterie</option>
+		  <option>Virus</option>
+		  <option>Parasitter</option>		  
+		</select> 
+	</div> 
+	<div id="symptom-chart-container">
+		<h2 id="symptomHead">Luftvei</h2>
+	</div>
 </div>
 
 
