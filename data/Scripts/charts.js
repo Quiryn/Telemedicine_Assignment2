@@ -1,8 +1,10 @@
 window.onload = init;
 
 var currentSymptom;
+var currentCounty;
 var dataset = null;
 var rows = [];
+var exampleRows = [];
 var luftveiRows = [];
 var gastroRows = [];
 var ndx = null;
@@ -21,7 +23,9 @@ var resultGroup = null;
 var nameGroup = null;
 
 function init() {
-	d3.json("Assets/19_ALL.json", readDataSource);
+	d3.json("Assets/18_ALL.json", readDataSource);
+    d3.json("Assets/19_ALL.json", readDataSource);
+    d3.json("Assets/20_ALL.json", readDataSource);
 	
 	d3.json("Assets/18_ALL.json", readDataSource2);
 	d3.json("Assets/19_ALL.json", readDataSource2);
@@ -43,11 +47,26 @@ function setSymptom(){
 	
 	displayData(result, "#symptom-chart-container");	
 }
+function setCounty(){
+    var result = [];
+    var select = document.getElementById("countySelect");
+    currentCounty = select.options[select.selectedIndex].text;
+    document.getElementById("countyHead").innerHTML = select.options[select.selectedIndex].text;
+
+
+    for(i = 0; i < exampleRows.length; i++){
+        if(exampleRows[i]["area"] == currentCounty){
+            result.push(exampleRows[i]);
+        }
+    }
+
+    showExampleData(result, "#chart-container");
+}
 
 function readDataSource(data) {
 	dataset = data;
 	
-	var exampleRows = [];
+
 	
 	for(i = 0; i < dataset["ResultSet"]["items"]["item"].length; i++) {
 		//for a first test: just focus on the category "Atypiske luftveisagens"
@@ -117,7 +136,8 @@ function readDataSource(data) {
 		//	}
 		}
 	}
-	showExampleData(exampleRows);
+	setCounty();
+	//showExampleData(exampleRows);
  }
 
 function readDataSource2(data) {
@@ -361,7 +381,7 @@ function showExampleData(rows){
 		});
 	
 	nameChart
-		.width(300)
+		.width(450)
 		.height(200)
 		.dimension(nameDimension)
 		.group(nameGroup)

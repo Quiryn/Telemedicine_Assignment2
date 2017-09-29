@@ -14,8 +14,21 @@
 </head>
 
 <body>
-<div width=100%>
+<div width="100%" style="float:left; margin-top:30px;">
+	<div class="dropdown" float="left">
+		<select id="countySelect" onchange="setCounty()">
+			<option value="troms" selected="selected">Troms</option>
+			<option value="finnmark">Finnmark</option>
+			<option value="nordland">Nordland</option>
+		</select>
+	</div>
 	<div id="chart-container">
+		<h2 id="countyHead">Troms</h2>
+	</div>
+
+</div>
+<div width=100%>
+	<div>
 		<h2>Occurence of different Types</h2>
 	</div>
 	<div id="result-chart-container">
@@ -23,6 +36,11 @@
 	</div>
 	<div id="name-chart-container">
 		<h2>Gender</h2>
+	</div>
+</div>
+<div id="chart-container">
+	<div class="dc-data-count">
+		<span class="filter-count"></span> selected out of <span class="total-count"></span> records | <a href="javascript:dc.filterAll(); dc.renderAll();">Reset All</a>
 	</div>
 </div>
 <div width="100%" style="float:left; margin-top:30px;">
@@ -46,11 +64,7 @@
 </div>
 
 
-<div id="chart-container">
-    <div class="dc-data-count">
-        <span class="filter-count"></span> selected out of <span class="total-count"></span> records | <a href="javascript:dc.filterAll(); dc.renderAll();">Reset All</a>
-    </div>
-</div>
+
 
 </body>    
 </html>
