@@ -11,14 +11,20 @@ var ndx = null;
 
 var chart = null;
 var areaChart = null;
+var countyChart = null;
+var diseaseChart = null;
 var resultChart = null;
 var nameChart = null;
 
 var dateDimension = null;
+var areaDimension = null;
+var diseaseDimension = null;
 var resultDimension = null;
-var nameChart = null;
 
 var dateGroup = null;
+var areaGroup = null;
+var countyGroup = null;
+var diseaseGroup = null;
 var resultGroup = null;
 var nameGroup = null;
 
@@ -30,6 +36,22 @@ function init() {
 	d3.json("Assets/18_ALL.json", readDataSource2);
 	d3.json("Assets/19_ALL.json", readDataSource2);
 	d3.json("Assets/20_ALL.json", readDataSource2);
+}
+
+function setCounty(){
+    var result = [];
+    /*var select = document.getElementById("countySelect");
+    currentCounty = select.options[select.selectedIndex].text;
+    document.getElementById("countyHead").innerHTML = select.options[select.selectedIndex].text;
+
+
+    for(i = 0; i < exampleRows.length; i++){
+        if(exampleRows[i]["area"] == currentCounty){
+            result.push(exampleRows[i]);
+        }
+    }*/
+	
+    showExampleData(exampleRows);
 }
 
 function setSymptom(){
@@ -47,21 +69,6 @@ function setSymptom(){
 	
 	displayData(result, "#symptom-chart-container");	
 }
-function setCounty(){
-    var result = [];
-    var select = document.getElementById("countySelect");
-    currentCounty = select.options[select.selectedIndex].text;
-    document.getElementById("countyHead").innerHTML = select.options[select.selectedIndex].text;
-
-
-    for(i = 0; i < exampleRows.length; i++){
-        if(exampleRows[i]["area"] == currentCounty){
-            result.push(exampleRows[i]);
-        }
-    }
-
-    showExampleData(result, "#chart-container");
-}
 
 function readDataSource(data) {
 	dataset = data;
@@ -69,9 +76,6 @@ function readDataSource(data) {
 
 	
 	for(i = 0; i < dataset["ResultSet"]["items"]["item"].length; i++) {
-		//for a first test: just focus on the category "Atypiske luftveisagens"
-		//if(dataset["ResultSet"]["items"]["item"] [i]["-name"] == "Atypiske luftveisagens") {	
-
 		var item = dataset["ResultSet"]["items"]["item"][i];
 
 		for(j = 0; j < item["areas"]["area"]["onLocation"].length; j++) {
@@ -85,7 +89,6 @@ function readDataSource(data) {
 			for(k = 0; k < unit["DataCollection"]["DataSet"].length; k++) {
 				var data = unit["DataCollection"]["DataSet"][k];
 				
-				//Because of some missing results and NULL-values, I excluded all the results devided by agegroup
 				if(data["categories"]["category"].length == 2) {
 					var ageGroup = null;
 					var sex = null;
@@ -137,9 +140,8 @@ function readDataSource(data) {
 		}
 	}
 	setCounty();
-	//showExampleData(exampleRows);
  }
-
+ 
 function readDataSource2(data) {
 	dataset = data;
 	
@@ -184,17 +186,20 @@ function readDataSource2(data) {
 			}
 		//}
 	}
-	setSymptom();
+	setSymptom();	
 }	
 
 function showExampleData(rows){	
 	ndx = crossfilter(rows);
 	
 	dateDimension = ndx.dimension(function(d) { return d.date });
+	areaDimension = ndx.dimension(function(d) { return d.area });
+	diseaseDimension = ndx.dimension(function(d) {return d.resultName});
 	resultDimension = ndx.dimension(function(d) { return d.ageGroup });
 	nameDimension = ndx.dimension(function(d) { return d.sex });
 	
-	dateGroup = dateDimension.group().reduce(
+	diseaseGroup = diseaseDimension.group().reduceSum(function(d) { return d.resultCount; });
+	/*diseasesGroup = dateDimension.group().reduce(
 		function(p, v) { 
 			p.count++;
 			
@@ -247,13 +252,52 @@ function showExampleData(rows){
 			return p;
 		},function() { 
 			return { count: 0, infA: 0, rs: 0, forkjolelsesvirus: 0, luftveisagens: 0, andre: 0, infB: 0 }
-		});
-	//replace reduceCount with reduceSum to not just count the appearances of a result but to sum up the values
+		});*/
+		
+	areaGroup = dateDimension.group().reduce(
+		function(p, v) { 
+			p.count++;
+			
+			switch(v.area) {
+			case "Troms":
+				p.troms += +v.resultCount;
+				break;
+			case "Nordland":
+				p.nordland += +v.resultCount;
+				break;
+			case "Finnmark":
+				p.finnmark += +v.resultCount;
+				break;
+			}
+			
+			return p;
+		},function(p, v) { 
+			p.count--;
+			
+			switch(v.area) {
+			case "Troms":
+				p.troms -= +v.resultCount;
+				break;
+			case "Nordland":
+				p.nordland -= +v.resultCount;
+				break;
+			case "Finnmark":
+				p.finnmark -= +v.resultCount;
+				break;
+			}
+			
+			return p;
+		},function() { 
+			return { count: 0, troms: 0, nordland: 0, finnmark: 0 }
+	});
+	countyGroup = areaDimension.group().reduceSum(function(d) { return d.resultCount; });
 	resultGroup = resultDimension.group().reduceSum(function(d) { return d.resultCount; });
 	nameGroup = nameDimension.group().reduceSum(function(d) { return d.resultCount; });
-	
+
 	
 	chart = dc.compositeChart("#chart-container");
+	countyChart = dc.pieChart("#county-chart-container");
+	diseaseChart = dc.pieChart("#disease-chart-container");
 	resultChart = dc.pieChart("#result-chart-container");
 	nameChart = dc.rowChart("#name-chart-container");
 		
@@ -262,7 +306,7 @@ function showExampleData(rows){
 		.height(220)
 		.margins({top: 20, right: 50, bottom: 25, left: 50})
 		.dimension(dateDimension)
-		.group(dateGroup)
+		.group(areaGroup)
 		.legend(dc.legend().x(60).y(10))
 		.renderLabel(false)
 		.x(d3.time.scale())                
@@ -272,18 +316,15 @@ function showExampleData(rows){
 		.renderHorizontalGridLines(true)
 		.title(function (d) {
 			return d.key.format("MMMM Do YYYY") + "\n" + 
-				"Influensa A: " + d.value.infA + "\n" +
-				"RS-virus: " + d.value.rs + "\n" +
-				"Forkjolelsesvirus: " + d.value.forkjolelsesvirus + "\n" +
-				"Atypiske luftveisagens: " + d.value.luftveisagens + "\n" +
-				"Andre bakterier: " + d.value.andre + "\n" +
-				"Influensa B: " + d.value.infB + "\n";
+				"Nordland: " + d.value.nordland + "\n" +
+				"Troms: " + d.value.troms + "\n" +
+				"Finnmark: " + d.value.finnmark + "\n";
 		})
 		.keyAccessor(function (d) {
 			return d.key;
 		})
 		.valueAccessor(function(d) {
-			return d.value.chlamydophila;
+			return d.value.date;
 		})
 		.elasticX(true)
 		.elasticY(true)
@@ -291,70 +332,84 @@ function showExampleData(rows){
 		.brushOn(false)
 		.compose([
 			dc.lineChart(chart)
-				.group(dateGroup, "Influensa A")
+				.group(areaGroup, "Nordland")
 				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
 				.defined(function(d){
 					return (d.y !== null && d.y !== 0);
 				})
 				.valueAccessor(function(d) {
-					return d.value.infA;
+					return d.value.nordland;
 				})
 				.ordinalColors(["Green"]),
 			dc.lineChart(chart)
-				.group(dateGroup, "RS-virus")
-				//.useRightYAxis(true)
+				.group(areaGroup, "Troms")
 				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
 				.defined(function(d){
 					return (d.y !== null && d.y !== 0);
 				})
 				.valueAccessor(function(d) {
-					return d.value.rs;
+					return d.value.troms;
 				})
 				.ordinalColors(["Red"]),
 			dc.lineChart(chart)
-				.group(dateGroup, "Forkjolelsesvirus")
+				.group(areaGroup, "Finnmark")
 				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
 				.defined(function(d){
 					return (d.y !== null && d.y !== 0);
 				})
 				.valueAccessor(function(d) {
-					return d.value.forkjolelsesvirus;
+					return d.value.finnmark;
 				})
-				.ordinalColors(["Orange"]),
-			dc.lineChart(chart)
-				.group(dateGroup, "Atypiske luftveisagens")
-				.useRightYAxis(true)
-				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
-				.defined(function(d){
-					return (d.y !== null && d.y !== 0);
-				})
-				.valueAccessor(function(d) {
-					return d.value.luftveisagens;
-				})
-				.ordinalColors(["Lightblue"]),
-			dc.lineChart(chart)
-				.group(dateGroup, "Andre bakterier")
-				.useRightYAxis(true)
-				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
-				.defined(function(d){
-					return (d.y !== null && d.y !== 0);
-				})
-				.valueAccessor(function(d) {
-					return d.value.andre;
-				})
-				.ordinalColors(["Grey"]),
-			dc.lineChart(chart)
-				.group(dateGroup, "Influensa B")
-				.useRightYAxis(true)
-				.renderDataPoints({radius: 4, fillOpacity: 0.8, strokeOpacity: 0.8})
-				.defined(function(d){
-					return (d.y !== null && d.y !== 0);
-				})
-				.valueAccessor(function(d) {
-					return d.value.infB;
-				})
-				.ordinalColors(["Lightgreen"]),
-		])
+				.ordinalColors(["Orange"])			
+		]);
+	
+	countyChart
+		.width(260)
+		.height(170)
+		.dimension(areaDimension)
+		.group(countyGroup)
+		.innerRadius(10)
+		.slicesCap(8)
+		.legend(dc.legend().x(175).y(0))
+		.ordering(function (d) {
+			return -d.value;
+		})
+		.keyAccessor(function (d) {
+			return d.key;
+		})
+		.cx(85)
+		.emptyTitle("Unknown")
+		.renderLabel(true)
+		.label(function (d) {
+			return d.key;
+		})
+		.title(function (d) {
+			return d.key + ": " + d.value;
+		});
+	
+	diseaseChart
+		.width(260)
+		.height(170)
+		.dimension(diseaseDimension)
+		.group(diseaseGroup)
+		.innerRadius(10)
+		.slicesCap(8)
+		.legend(dc.legend().x(175).y(0))
+		.ordering(function (d) {
+			return -d.value;
+		})
+		.keyAccessor(function (d) {
+			return d.key;
+		})
+		.cx(85)
+		.emptyTitle("Unknown")
+		.renderLabel(true)
+		.label(function (d) {
+			return d.key;
+		})
+		.title(function (d) {
+			return d.key + ": " + d.value;
+		});
 	
 	resultChart
 		.width(260)
@@ -447,10 +502,6 @@ function displayData(rows, chartContainer){
 		},function() { 
 			return { count: 0, troms: 0, nordland: 0, finnmark: 0 }
 		});
-		
-	//replace reduceCount with reduceSum to not just count the appearances of a result but to sum up the values
-	//resultGroup = resultDimension.group().reduceSum(function(d) { return d.resultCount; });
-	//nameGroup = nameDimension.group().reduceSum(function(d) { return d.resultCount; });
 	
 	areaChart = dc.compositeChart(chartContainer);
 	
