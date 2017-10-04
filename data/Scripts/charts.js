@@ -4,9 +4,7 @@ var currentSymptom;
 var currentCounty;
 var dataset = null;
 var rows = [];
-var exampleRows = [];
-var luftveiRows = [];
-var gastroRows = [];
+var resultRows = [];
 var ndx = null;
 
 var chart = null;
@@ -42,42 +40,8 @@ function init() {
 	d3.json("Assets/20_ALL.json", readDataSource2);
 }
 
-function setCounty(){
-    var result = [];
-    /*var select = document.getElementById("countySelect");
-    currentCounty = select.options[select.selectedIndex].text;
-    document.getElementById("countyHead").innerHTML = select.options[select.selectedIndex].text;
-
-
-    for(i = 0; i < exampleRows.length; i++){
-        if(exampleRows[i]["area"] == currentCounty){
-            result.push(exampleRows[i]);
-        }
-    }*/
-	
-    showExampleData(exampleRows);
-}
-
-function setSymptom(){
-	var result = [];
-	var select = document.getElementById("symptomSelect");
-	currentSymptom = select.options[select.selectedIndex].text;
-	document.getElementById("symptomHead").innerHTML = select.options[select.selectedIndex].text;
-	
-	
-	for(i = 0; i < rows.length; i++){
-		if(rows[i]["resultName"] == currentSymptom){
-			result.push(rows[i]);
-		}
-	}
-	
-	displayData(result, "#area-chart-container");	
-}
-
 function readDataSource(data) {
 	dataset = data;
-	
-
 	
 	for(i = 0; i < dataset["ResultSet"]["items"]["item"].length; i++) {
 		var item = dataset["ResultSet"]["items"]["item"][i];
@@ -137,65 +101,15 @@ function readDataSource(data) {
 								sex: sex
 							};
 
-							exampleRows.push(row);
+							resultRows.push(row);
 						}	
 					}
 				}
 			}
 		}
 	}
-	setCounty();
- }
- 
-function readDataSource2(data) {
-	dataset = data;
 	
-	for(i = 0; i < dataset["ResultSet"]["items"]["item"].length; i++) {
-		//if(dataset["ResultSet"]["items"]["item"] [i]["-name"] == "Alle") {	
-
-			var item = dataset["ResultSet"]["items"]["item"][i];
-
-			for(j = 0; j < item["areas"]["area"]["onLocation"].length; j++) {
-				var unit = item["areas"]["area"]["onLocation"][j];
-				
-				var data = unit["AggregatedCollection"]["DataSet"];				
-
-				for(l = 0; l < data["dataResults"]["result"].length; l++) {
-
-					var result = JSON.parse("[" + data["dataResults"]["result"][l]["values"] + "]");
-					var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1);
-					
-					for(m = 0; m < result.length; m++) {						
-						var resultValue = result[m];
-						var date = moment(data["-startDate"], "YYYY-MM-DD").add((result.length - m - 1) * (result.length == 7 ? 28 : 7), 'days'); 
-						
-						var row = { 
-							name: item["areas"]["area"]["-name"],
-							area: item["areas"]["area"]["-name"],
-							date: date,
-							resultName: resultName,
-							resultCount: resultValue
-						};
-						rows.push(row);
-					}
-					
-					/*if(rows[resultName] == "undefined"){
-						console.log(JSON.stringify(rows));
-						rows[resultName] = tempRows;
-					}else{
-						console.log(JSON.stringify(tempRows[0]));
-						rows[resultName].concat(tempRows);
-
-					}*/
-				}	
-			}
-		//}
-	}
-	setSymptom();	
-}	
-
-function showExampleData(rows){	
-	ndx = crossfilter(rows);
+	ndx = crossfilter(resultRows);
 	
 	dateDimension = ndx.dimension(function(d) { return d.date });
 	areaDimension = ndx.dimension(function(d) { return d.area });
@@ -256,7 +170,7 @@ function showExampleData(rows){
 	genderChart = dc.rowChart("#gender-chart-container");
 		
 	chart
-		.width(500)
+		.width(700)
 		.height(220)
 		.margins({top: 20, right: 50, bottom: 25, left: 50})
 		.dimension(dateDimension)
@@ -437,6 +351,63 @@ function showExampleData(rows){
 
 	dc.renderAll();
 	dc.filterAll();
+}
+
+
+/*
+*	Second approach, large diagram over time with values for every week
+*/
+
+function readDataSource2(data) {
+	dataset = data;
+	
+	for(i = 0; i < dataset["ResultSet"]["items"]["item"].length; i++) {	
+
+		var item = dataset["ResultSet"]["items"]["item"][i];
+
+		for(j = 0; j < item["areas"]["area"]["onLocation"].length; j++) {
+			var unit = item["areas"]["area"]["onLocation"][j];
+			
+			var data = unit["AggregatedCollection"]["DataSet"];				
+
+			for(l = 0; l < data["dataResults"]["result"].length; l++) {
+
+				var result = JSON.parse("[" + data["dataResults"]["result"][l]["values"] + "]");
+				var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1);
+				
+				for(m = 0; m < result.length; m++) {						
+					var resultValue = result[m];
+					var date = moment(data["-startDate"], "YYYY-MM-DD").add((result.length - m - 1) * (result.length == 7 ? 28 : 7), 'days'); 
+					
+					var row = { 
+						name: item["areas"]["area"]["-name"],
+						area: item["areas"]["area"]["-name"],
+						date: date,
+						resultName: resultName,
+						resultCount: resultValue
+					};
+					rows.push(row);
+				}
+			}	
+		}
+	}
+	setSymptom();	
+}	
+
+function setSymptom(){
+	var result = [];
+	var select = document.getElementById("symptomSelect");
+	currentSymptom = select.options[select.selectedIndex].text;
+	document.getElementById("symptomHead").innerHTML = select.options[select.selectedIndex].text;
+	
+	
+	for(i = 0; i < rows.length; i++){
+		if(rows[i]["resultName"] == currentSymptom){
+			result.push(rows[i]);
+		}
+	}
+	
+	displayData(result, "#area-chart-container");	
 }
 
 function displayData(rows, chartContainer){
