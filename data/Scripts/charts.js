@@ -12,21 +12,25 @@ var ndx = null;
 var chart = null;
 var areaChart = null;
 var countyChart = null;
+var symptomChart = null;
 var diseaseChart = null;
-var resultChart = null;
-var nameChart = null;
+var ageChart = null;
+var genderChart = null;
 
 var dateDimension = null;
 var areaDimension = null;
+var symptomDimension = null;
 var diseaseDimension = null;
-var resultDimension = null;
+var ageDimension = null;
+var genderDimension = null;
 
 var dateGroup = null;
 var areaGroup = null;
 var countyGroup = null;
+var symptomGroup = null;
 var diseaseGroup = null;
-var resultGroup = null;
-var nameGroup = null;
+var ageGroup = null;
+var genderGroup = null;
 
 function init() {
 	d3.json("Assets/18_ALL.json", readDataSource);
@@ -67,7 +71,7 @@ function setSymptom(){
 		}
 	}
 	
-	displayData(result, "#symptom-chart-container");	
+	displayData(result, "#area-chart-container");	
 }
 
 function readDataSource(data) {
@@ -77,66 +81,67 @@ function readDataSource(data) {
 	
 	for(i = 0; i < dataset["ResultSet"]["items"]["item"].length; i++) {
 		var item = dataset["ResultSet"]["items"]["item"][i];
-
-		for(j = 0; j < item["areas"]["area"]["onLocation"].length; j++) {
-			var unit = item["areas"]["area"]["onLocation"][j];
-			
-			if(unit["DataCollection"] == null) {
-				continue;
-			}
-			
-			var resultValue = [0,0,0,0,0,0,0];
-			for(k = 0; k < unit["DataCollection"]["DataSet"].length; k++) {
-				var data = unit["DataCollection"]["DataSet"][k];
+		
+		if(item["-name"] != "Alle"){
+			for(j = 0; j < item["areas"]["area"]["onLocation"].length; j++) {
+				var unit = item["areas"]["area"]["onLocation"][j];
 				
-				if(data["categories"]["category"].length == 2) {
-					var ageGroup = null;
-					var sex = null;
+				if(unit["DataCollection"] == null) {
+					continue;
+				}
+				
+				var resultValue = [0,0,0,0,0,0,0];
+				for(k = 0; k < unit["DataCollection"]["DataSet"].length; k++) {
+					var data = unit["DataCollection"]["DataSet"][k];
+					
+					if(data["categories"]["category"].length == 2) {
+						var ageGroup = null;
+						var sex = null;
 
-					if(data["categories"]["category"][0]["type"] == "AgeGroup"){
-						ageGroup = data["categories"]["category"][0]["value"];
-					}
-					if(data["categories"]["category"][1]["type"] == "Sex"){
-						sex = data["categories"]["category"][1]["value"];
-					}
+						if(data["categories"]["category"][0]["type"] == "AgeGroup"){
+							ageGroup = data["categories"]["category"][0]["value"];
+						}
+						if(data["categories"]["category"][1]["type"] == "Sex"){
+							sex = data["categories"]["category"][1]["value"];
+						}
 
-					if(data["dataResults"]["result"].length == undefined) {
-						var result = JSON.parse("[" + data["dataResults"]["result"]["values"] + "]");
-						var resultName = data["dataResults"]["result"]["name"].substring(data["dataResults"]["result"]["name"].indexOf("=") + 1);
-						
-						for(m = 0; m < result.length; m++) {						
-							resultValue[m] += result[m];							
-						}	
-					}
-					else{
-						for(l = 0; l < data["dataResults"]["result"].length; l++) {
-							var result = JSON.parse("[" + data["dataResults"]["result"][l]["values"] + "]");
-							var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1);
+						if(data["dataResults"]["result"].length == undefined) {
+							var result = JSON.parse("[" + data["dataResults"]["result"]["values"] + "]");
+							var resultName = data["dataResults"]["result"]["name"].substring(data["dataResults"]["result"]["name"].indexOf("=") + 1);
 							
 							for(m = 0; m < result.length; m++) {						
-								resultValue[m] += result[m];								
+								resultValue[m] += result[m];							
+							}	
+						}
+						else{
+							for(l = 0; l < data["dataResults"]["result"].length; l++) {
+								var result = JSON.parse("[" + data["dataResults"]["result"][l]["values"] + "]");
+								var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1);
+								
+								for(m = 0; m < result.length; m++) {						
+									resultValue[m] += result[m];								
+								}
 							}
 						}
-					}
-					
-					for(m = 0; m < resultValue.length; m++) {
-						var date = moment(data["-startDate"], "YYYY-MM-DD").add((resultValue.length - m - 1) * (resultValue.length == 7 ? 28 : 7), 'days'); 
-								
-						var row = { 
-							name: item["-name"],
-							area: item["areas"]["area"]["-name"],
-							date: date,
-							resultName: resultName,
-							resultCount: resultValue[m],
-							ageGroup: ageGroup,
-							sex: sex
-						};
+						
+						for(m = 0; m < resultValue.length; m++) {
+							var date = moment(data["-startDate"], "YYYY-MM-DD").add((resultValue.length - m - 1) * (resultValue.length == 7 ? 28 : 7), 'days'); 
+									
+							var row = { 
+								symptom: item["-name"],
+								area: item["areas"]["area"]["-name"],
+								date: date,
+								resultName: resultName,
+								resultCount: resultValue[m],
+								ageGroup: ageGroup,
+								sex: sex
+							};
 
-						exampleRows.push(row);
-					}	
+							exampleRows.push(row);
+						}	
+					}
 				}
 			}
-		//	}
 		}
 	}
 	setCounty();
@@ -194,65 +199,10 @@ function showExampleData(rows){
 	
 	dateDimension = ndx.dimension(function(d) { return d.date });
 	areaDimension = ndx.dimension(function(d) { return d.area });
+	symptomDimension = ndx.dimension(function(d) {return d.symptom});
 	diseaseDimension = ndx.dimension(function(d) {return d.resultName});
-	resultDimension = ndx.dimension(function(d) { return d.ageGroup });
-	nameDimension = ndx.dimension(function(d) { return d.sex });
-	
-	diseaseGroup = diseaseDimension.group().reduceSum(function(d) { return d.resultCount; });
-	/*diseasesGroup = dateDimension.group().reduce(
-		function(p, v) { 
-			p.count++;
-			
-			switch(v.resultName) {
-			case "Influensa A":
-				p.infA += +v.resultCount;
-				break;
-			case "RS-virus":
-				p.rs += +v.resultCount;
-				break;
-			case "Forkjolelsesvirus":
-				p.forkjolelsesvirus += +v.resultCount;
-				break;
-			case "Atypiske luftveisagens":
-				p.luftveisagens += +v.resultCount;
-				break;
-			case "Andre bakterier":
-				p.andre += +v.resultCount;
-				break;
-			case "Influensa B":
-				p.infB += +v.resultCount;
-				break;
-			}
-			
-			return p;
-		},function(p, v) { 
-			p.count--;
-			
-			switch(v.resultName) {
-			case "Influensa A":
-				p.infA -= +v.resultCount;
-				break;
-			case "RS-virus":
-				p.rs -= +v.resultCount;
-				break;
-			case "Forkjolelsesvirus":
-				p.forkjolelsesvirus -= +v.resultCount;
-				break;
-			case "Atypiske luftveisagens":
-				p.luftveisagens -= +v.resultCount;
-				break;
-			case "Andre bakterier":
-				p.andre -= +v.resultCount;
-				break;
-			case "Influensa B":
-				p.infB -= +v.resultCount;
-				break;
-			}
-			
-			return p;
-		},function() { 
-			return { count: 0, infA: 0, rs: 0, forkjolelsesvirus: 0, luftveisagens: 0, andre: 0, infB: 0 }
-		});*/
+	ageDimension = ndx.dimension(function(d) { return d.ageGroup });
+	genderDimension = ndx.dimension(function(d) { return d.sex });
 		
 	areaGroup = dateDimension.group().reduce(
 		function(p, v) { 
@@ -290,16 +240,20 @@ function showExampleData(rows){
 		},function() { 
 			return { count: 0, troms: 0, nordland: 0, finnmark: 0 }
 	});
+	
+	symptomGroup = symptomDimension.group().reduceSum(function(d) { return d.resultCount; });
+	diseaseGroup = diseaseDimension.group().reduceSum(function(d) { return d.resultCount; });
 	countyGroup = areaDimension.group().reduceSum(function(d) { return d.resultCount; });
-	resultGroup = resultDimension.group().reduceSum(function(d) { return d.resultCount; });
-	nameGroup = nameDimension.group().reduceSum(function(d) { return d.resultCount; });
+	ageGroup = ageDimension.group().reduceSum(function(d) { return d.resultCount; });
+	genderGroup = genderDimension.group().reduceSum(function(d) { return d.resultCount; });
 
 	
 	chart = dc.compositeChart("#chart-container");
 	countyChart = dc.pieChart("#county-chart-container");
+	symptomChart = dc.pieChart("#symptom-chart-container");
 	diseaseChart = dc.pieChart("#disease-chart-container");
-	resultChart = dc.pieChart("#result-chart-container");
-	nameChart = dc.rowChart("#name-chart-container");
+	ageChart = dc.pieChart("#age-chart-container");
+	genderChart = dc.rowChart("#gender-chart-container");
 		
 	chart
 		.width(500)
@@ -387,6 +341,30 @@ function showExampleData(rows){
 			return d.key + ": " + d.value;
 		});
 	
+	symptomChart
+		.width(260)
+		.height(170)
+		.dimension(symptomDimension)
+		.group(symptomGroup)
+		.innerRadius(10)
+		.slicesCap(8)
+		.legend(dc.legend().x(175).y(0))
+		.ordering(function (d) {
+			return -d.value;
+		})
+		.keyAccessor(function (d) {
+			return d.key;
+		})
+		.cx(85)
+		.emptyTitle("Unknown")
+		.renderLabel(true)
+		.label(function (d) {
+			return d.key;
+		})
+		.title(function (d) {
+			return d.key + ": " + d.value;
+		});
+		
 	diseaseChart
 		.width(260)
 		.height(170)
@@ -411,11 +389,11 @@ function showExampleData(rows){
 			return d.key + ": " + d.value;
 		});
 	
-	resultChart
+	ageChart
 		.width(260)
 		.height(170)
-		.dimension(resultDimension)
-		.group(resultGroup)
+		.dimension(ageDimension)
+		.group(ageGroup)
 		.innerRadius(10)
 		.slicesCap(8)
 		.legend(dc.legend().x(175).y(0))
@@ -435,11 +413,11 @@ function showExampleData(rows){
 			return d.key + ": " + d.value;
 		});
 	
-	nameChart
+	genderChart
 		.width(450)
 		.height(200)
-		.dimension(nameDimension)
-		.group(nameGroup)
+		.dimension(genderDimension)
+		.group(genderGroup)
 		.elasticX(true)
 		.ordering(function (d) {
 			return -d.value;
