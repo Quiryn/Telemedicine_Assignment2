@@ -14,39 +14,38 @@
 </head>
 
 <body>
-<div width="100%" style="float:left; margin-top:30px;">
+<div width="100%" style="float:left; margin-top:5px;">
 	<div>
-		<h2>Occurence of different Types</h2>
+		<h1>Occurence of different Types</h1>
 	</div>
-	<div id="chart-container">
+	<div id="chart-container" style="margin-left: 15px;">
 		<h2 id="countyHead">Areas</h2>
 	</div>
-
-</div>
-<div width=100% style="float:left; margin-top:30px;">
-	<div id="county-chart-container">
-		<h2>Counties</h2>
-	</div>
-	<div id="symptom-chart-container">
-		<h2>Symptoms</h2>
-	</div>
-	<div id="disease-chart-container">
-		<h2>Causes</h2>
-	</div>
-	<div id="age-chart-container">
-		<h2>Age Groups</h2>
-	</div>
-</div>
-<div width=100% style="float:left; margin-bottom:50px;">
-	<div id="gender-chart-container">
+	<div id="gender-chart-container" style="margin-left: 50px;">
 		<h2>Gender</h2>
 	</div>
 </div>
-<div id="chart-container">
+<div id="chart-container" height="5px" width="20%" style="float:left; margin-top:5px;">
 	<div class="dc-data-count">
 		<span class="filter-count"></span> selected out of <span class="total-count"></span> records | <a href="javascript:dc.filterAll(); dc.renderAll();">Reset All</a>
 	</div>
 </div>
+<div width=100% style="float:left; margin-top:30px;">
+	<div id="county-chart-container" style="margin-left: 6vw;">
+		<h2>Counties</h2>
+	</div>
+	<div id="symptom-chart-container" style="margin-left: 6vw;">
+		<h2>Symptoms</h2>
+	</div>
+	<div id="disease-chart-container" style="margin-left: 6vw;">
+		<h2>Causes</h2>
+	</div>
+	<div id="age-chart-container" style="margin-left: 6vw;">
+		<h2>Age Groups</h2>
+	</div>
+</div>
+
+
 <div width="100%" style="float:left; margin-top:30px;">
 	<div class="dropdown" float="left">
 	   <select id="symptomSelect" onchange="setSymptom()">
