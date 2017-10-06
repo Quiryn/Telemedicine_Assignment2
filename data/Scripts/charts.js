@@ -74,7 +74,19 @@ function readDataSource(data) {
 							var resultName = data["dataResults"]["result"]["name"].substring(data["dataResults"]["result"]["name"].indexOf("=") + 1);
 							
 							for(m = 0; m < result.length; m++) {						
-								resultValue[m] += result[m];							
+								var date = moment(data["-startDate"], "YYYY-MM-DD").add(m * (resultValue.length == 7 ? 28 : 7), 'days'); 
+
+								var row = { 
+									symptom: item["-name"],
+									area: item["areas"]["area"]["-name"],
+									date: date,
+									resultName: resultName,
+									resultCount: result[m],
+									ageGroup: ageGroup,
+									sex: sex
+								};
+
+								resultRows.push(row);
 							}	
 						}
 						else{
@@ -83,26 +95,22 @@ function readDataSource(data) {
 								var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1);
 								
 								for(m = 0; m < result.length; m++) {						
-									resultValue[m] += result[m];								
+									var date = moment(data["-startDate"], "YYYY-MM-DD").add(m * (resultValue.length == 7 ? 28 : 7), 'days'); 
+
+									var row = { 
+										symptom: item["-name"],
+										area: item["areas"]["area"]["-name"],
+										date: date,
+										resultName: resultName,
+										resultCount: result[m],
+										ageGroup: ageGroup,
+										sex: sex
+									};
+
+									resultRows.push(row);								
 								}
 							}
 						}
-						
-						for(m = 0; m < resultValue.length; m++) {
-							var date = moment(data["-startDate"], "YYYY-MM-DD").add((resultValue.length - m - 1) * (resultValue.length == 7 ? 28 : 7), 'days'); 
-									
-							var row = { 
-								symptom: item["-name"],
-								area: item["areas"]["area"]["-name"],
-								date: date,
-								resultName: resultName,
-								resultCount: resultValue[m],
-								ageGroup: ageGroup,
-								sex: sex
-							};
-
-							resultRows.push(row);
-						}	
 					}
 				}
 			}
@@ -160,14 +168,14 @@ function readDataSource(data) {
 	countyGroup = areaDimension.group().reduceSum(function(d) { return d.resultCount; });
 	ageGroup = ageDimension.group().reduceSum(function(d) { return d.resultCount; });
 	genderGroup = genderDimension.group().reduceSum(function(d) { return d.resultCount; });
-
 	
 	chart = dc.compositeChart("#chart-container");
 	countyChart = dc.pieChart("#county-chart-container");
 	symptomChart = dc.pieChart("#symptom-chart-container");
-	diseaseChart = dc.pieChart("#disease-chart-container");
 	ageChart = dc.pieChart("#age-chart-container");
-	genderChart = dc.rowChart("#gender-chart-container");
+	genderChart = dc.pieChart("#gender-chart-container");
+	diseaseChart = dc.barChart("#disease-chart-container");
+
 		
 	chart
 		.width(700)
@@ -279,30 +287,6 @@ function readDataSource(data) {
 			return d.key + ": " + d.value;
 		});
 		
-	diseaseChart
-		.width(260)
-		.height(170)
-		.dimension(diseaseDimension)
-		.group(diseaseGroup)
-		.innerRadius(10)
-		.slicesCap(8)
-		.legend(dc.legend().x(175).y(0))
-		.ordering(function (d) {
-			return -d.value;
-		})
-		.keyAccessor(function (d) {
-			return d.key;
-		})
-		.cx(85)
-		.emptyTitle("Unknown")
-		.renderLabel(true)
-		.label(function (d) {
-			return d.key;
-		})
-		.title(function (d) {
-			return d.key + ": " + d.value;
-		});
-	
 	ageChart
 		.width(260)
 		.height(170)
@@ -328,20 +312,48 @@ function readDataSource(data) {
 		});
 	
 	genderChart
-		.width(450)
-		.height(200)
+		.width(260)
+		.height(170)
 		.dimension(genderDimension)
 		.group(genderGroup)
-		.elasticX(true)
+		.innerRadius(10)
+		.slicesCap(8)
+		.legend(dc.legend().x(175).y(0))
 		.ordering(function (d) {
 			return -d.value;
 		})
+		.keyAccessor(function (d) {
+			return d.key;
+		})
+		.cx(85)
+		.emptyTitle("Unknown")
+		.renderLabel(true)
 		.label(function (d) {
 			return d.key;
 		})
 		.title(function (d) {
 			return d.key + ": " + d.value;
 		});
+		
+	diseaseChart
+		 .width(500)
+		 .dimension(diseaseDimension)
+		 .group(diseaseGroup)
+		 .label(function (d) {
+                    return d.key;
+                })
+		 .x(d3.scale.ordinal().domain(["", "Atypiske luftveisagens","Forkjolelsesvirus","Influensa A","Influensa B", "RS-virus", "Virus", "Bakterie", "Parasitter"])) // Need the empty val to offset the first value
+		 .elasticY(true)
+		 .xUnits(dc.units.ordinal) // Tell Dc.js that we're using an ordinal x axis
+		 .brushOn(false)
+		 .centerBar(true)
+		 .xAxisPadding(500)
+		 .renderlet(function (myBarChart) {
+			 // rotate x-axis labels
+			 myBarChart.selectAll('g.x text')
+					 .attr('transform', 'translate(0,-20) rotate(90)');
+		 });
+
 	
 	var all = ndx.groupAll();
 
@@ -377,7 +389,7 @@ function readDataSource2(data) {
 				
 				for(m = 0; m < result.length; m++) {						
 					var resultValue = result[m];
-					var date = moment(data["-startDate"], "YYYY-MM-DD").add((result.length - m - 1) * (result.length == 7 ? 28 : 7), 'days'); 
+					var date = moment(data["-startDate"], "YYYY-MM-DD").add(m * (result.length == 7 ? 28 : 7), 'days'); 
 					
 					var row = { 
 						name: item["areas"]["area"]["-name"],

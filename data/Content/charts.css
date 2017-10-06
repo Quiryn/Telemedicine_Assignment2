@@ -1,7 +1,8 @@
 ﻿
 
-.dc-chart g.row text {
-    fill: black;
-    font-size: 12px;
+.dc-chart .axis text {
+    font-size: 13px;
     cursor: pointer;
 }
+
+
