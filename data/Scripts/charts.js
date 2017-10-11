@@ -35,9 +35,11 @@ function init() {
     d3.json("Assets/19_ALL.json", readDataSource);
     d3.json("Assets/20_ALL.json", readDataSource);
 	
+	
 	d3.json("Assets/18_ALL.json", readDataSource2);
 	d3.json("Assets/19_ALL.json", readDataSource2);
 	d3.json("Assets/20_ALL.json", readDataSource2);
+	
 }
 
 function readDataSource(data) {
@@ -46,7 +48,8 @@ function readDataSource(data) {
 	for(i = 0; i < dataset["ResultSet"]["items"]["item"].length; i++) {
 		var item = dataset["ResultSet"]["items"]["item"][i];
 		
-		if(item["-name"] != "Alle"){
+		if(item["@attributes"]["name"] != "Alle"){
+			
 			for(j = 0; j < item["areas"]["area"]["onLocation"].length; j++) {
 				var unit = item["areas"]["area"]["onLocation"][j];
 				
@@ -74,11 +77,11 @@ function readDataSource(data) {
 							var resultName = data["dataResults"]["result"]["name"].substring(data["dataResults"]["result"]["name"].indexOf("=") + 1);
 							
 							for(m = 0; m < result.length; m++) {						
-								var date = moment(data["-startDate"], "YYYY-MM-DD").add(m * (resultValue.length == 7 ? 28 : 7), 'days'); 
+								var date = moment(data["@attributes"]["startDate"], "YYYY-MM-DD").add(m * (resultValue.length == 7 ? 28 : 7), 'days'); 
 
 								var row = { 
-									symptom: item["-name"],
-									area: item["areas"]["area"]["-name"],
+									symptom: item["@attributes"]["name"],
+									area: item["areas"]["area"]["@attributes"]["name"],
 									date: date,
 									resultName: resultName,
 									resultCount: result[m],
@@ -95,18 +98,18 @@ function readDataSource(data) {
 								var resultName = data["dataResults"]["result"][l]["name"].substring(data["dataResults"]["result"][l]["name"].indexOf("=") + 1);
 								
 								for(m = 0; m < result.length; m++) {						
-									var date = moment(data["-startDate"], "YYYY-MM-DD").add(m * (resultValue.length == 7 ? 28 : 7), 'days'); 
+									var date = moment(data["@attributes"]["startDate"], "YYYY-MM-DD").add(m * (resultValue.length == 7 ? 28 : 7), 'days'); 
 
 									var row = { 
-										symptom: item["-name"],
-										area: item["areas"]["area"]["-name"],
+										symptom: item["@attributes"]["name"],
+										area: item["areas"]["area"]["@attributes"]["name"],
 										date: date,
 										resultName: resultName,
 										resultCount: result[m],
 										ageGroup: ageGroup,
 										sex: sex
 									};
-
+									console.log(row);
 									resultRows.push(row);								
 								}
 							}
@@ -389,11 +392,10 @@ function readDataSource2(data) {
 				
 				for(m = 0; m < result.length; m++) {						
 					var resultValue = result[m];
-					var date = moment(data["-startDate"], "YYYY-MM-DD").add(m * (result.length == 7 ? 28 : 7), 'days'); 
+					var date = moment(data["@attributes"]["startDate"], "YYYY-MM-DD").add(m * (result.length == 7 ? 28 : 7), 'days'); 
 					
 					var row = { 
-						name: item["areas"]["area"]["-name"],
-						area: item["areas"]["area"]["-name"],
+						name: item["areas"]["area"]["@attributes"]["name"],
 						date: date,
 						resultName: resultName,
 						resultCount: resultValue
